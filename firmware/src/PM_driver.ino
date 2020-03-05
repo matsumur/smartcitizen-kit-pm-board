@@ -127,8 +127,12 @@ void requestEvent()
 #ifdef debug_PM
 			SerialUSB.println("Sending click values...");
 #endif
-			if (clicksensor.active) for (uint8_t i=0; i<valuesSize; i++) Wire.write(clicksensor.values[i]);
-			else for (uint8_t i=0; i<valuesSize; i++) Wire.write(255);
+			if (clicksensor.active){
+				for (uint8_t i=0; i<valuesSize; i++) Wire.write(clicksensor.values[i]);
+				clicksensor.buttonCount = 0;
+			}else{
+				for (uint8_t i=0; i<valuesSize; i++) Wire.write(255);
+			}
 			break;
 		}
 	}
