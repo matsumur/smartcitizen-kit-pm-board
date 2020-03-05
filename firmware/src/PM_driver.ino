@@ -4,7 +4,7 @@
 
 #include <PM_driver.h>
 
-#define I2C_ADDRESS 0x02
+#define I2C_ADDRESS 0x03
 
 // Hardware Serial UART PM-A
 Uart SerialPMA_A (&sercom2, RX_A, TX_A, SERCOM_RX_PAD_1, UART_TX_PAD_0);
@@ -20,14 +20,9 @@ void SERCOM1_Handler() {
 	SerialGrove.IrqHandler();
 }
 
-PMsensor pmA(&SerialPMA_A, POWER_PMS_A, ENABLE_PMS_A, RESET_PMS_A);
-PMsensor pmB(&SerialPMA_B, POWER_PMS_B, ENABLE_PMS_B, RESET_PMS_B);
+ClickSensor clicksensor;
 
-volatile uint8_t wichCommand = GET_PMA;
-
-Sck_DallasTemp dallasTemp;
-
-uint32_t timer = 0;
+volatile uint8_t wichCommand = 99;
 
 void setup()
 {
@@ -67,9 +62,9 @@ void setup()
 	pinMode(ADC2, INPUT);
 	pinMode(ADC3, INPUT);
 
-	// GPIO as output
-	pinMode(GPIO0, OUTPUT);
-	pinMode(GPIO1, OUTPUT);
+	// GPIO as input
+	pinMode(GPIO0, INPUT);
+	pinMode(GPIO1, INPUT);
 
 	// Groove UART
 	SerialGrove.begin(115200);
@@ -85,165 +80,61 @@ void setup()
 	while (!SerialUSB);
 	SerialUSB.println("Starting...");
 #endif
+
+	clicksensor.begin();
 }
+
 void receiveEvent(int howMany)
 {
 	byte command = 99;
 	if (Wire.available()) command = Wire.read();
 
 	switch(command) {
-
-		case PM_START:
+		case CLICK_START:
 		{
-				SerialPMA_A.begin(9600);
-				pinPeripheral(RX_A, PIO_SERCOM_ALT);	// PMA_A serial port
-				pinPeripheral(TX_A, PIO_SERCOM_ALT);	// PMA_A serial port
-				pmA.begin();
-				delay(1000);
-
-				SerialPMA_B.begin(9600);
-				pmB.begin();
-				delay(3000);
-
-				wichCommand = command;
-				break;
+			clicksensor.begin();
+			wichCommand = command;
+			break;
 		}
-		case PM_STOP:
+		case CLICK_STOP:
 		{
-				pmA.stop();
-				pmB.stop();
-				break;
+			clicksensor.stop();
+			break;
 		}
-		case GET_PM_AVG:
-		case GET_PMA:
-		case GET_PMB:
-		case DALLASTEMP_START:
-		case DALLASTEMP_STOP:
-		case GET_DALLASTEMP:
+		case CLICK_GET:
 		{
-				wichCommand = command;
-				break;
+			wichCommand = command;
+			break;
 		}
 	}
-	/* bool t = digitalRead(pinBLUE); */
-	/* digitalWrite(pinBLUE, !t); */
 }
+
 void requestEvent()
 {
+
 	switch (wichCommand)
-{
-	case PM_START:
 	{
+		case CLICK_START:
+		{
 #ifdef debug_PM
-			SerialUSB.println("Starting PM sensor...");
+			SerialUSB.println("Starting Click sensor...");
 #endif
-			if (SerialPMA_A.available() || SerialPMA_B.available()) Wire.write(1);
-			else {
-#ifdef debug_PM
-			SerialUSB.println("ERROR Starting PM sensor!!!");
-#endif
-				Wire.write(0);
-				pmA.stop();
-				pmB.stop();
-			}
+			Wire.write(1);
 			break;
-	}
-	case GET_PMA:
-	{
+		}
+		case CLICK_GET:
+		{
 #ifdef debug_PM
-			SerialUSB.println("Sending PMA values...");
+			SerialUSB.println("Sending click values...");
 #endif
-			if (pmA.active) for (uint8_t i=0; i<valuesSize; i++) Wire.write(pmA.values[i]);
+			if (clicksensor.active) for (uint8_t i=0; i<valuesSize; i++) Wire.write(clicksensor.values[i]);
 			else for (uint8_t i=0; i<valuesSize; i++) Wire.write(255);
 			break;
+		}
 	}
-	case GET_PMB:
-	{
-#ifdef debug_PM
-			SerialUSB.println("Sending PMB values...");
-#endif
-			if (pmB.active) for (uint8_t i=0; i<valuesSize; i++) Wire.write(pmB.values[i]);
-			else for (uint8_t i=0; i<valuesSize; i++) Wire.write(255);
-			break;
-	}
-	case GET_PM_AVG:
-	{
-#ifdef debug_PM
-			SerialUSB.println("Sending average values...");
-#endif
-			uint8_t toSendValues[valuesSize];
-
-			// Average both readings
-			if (pmA.active && pmB.active) {
-
-				uint16_t bothPm1 = (pmA.pm1 + pmB.pm1) / 2;
-				uint16_t bothPm25 = (pmA.pm25 + pmB.pm25) / 2;
-				uint16_t bothPm10 = (pmA.pm10 + pmB.pm10) / 2;
-				uint16_t bothPn03 = (pmA.pn03 + pmB.pn03) / 2;
-				uint16_t bothPn05 = (pmA.pn05 + pmB.pn05) / 2;
-				uint16_t bothPn1 = (pmA.pn1 + pmB.pn1) / 2;
-				uint16_t bothPn25 = (pmA.pn25 + pmB.pn25) / 2;
-				uint16_t bothPn5 = (pmA.pn5 + pmB.pn5) / 2;
-				uint16_t bothPn10 = (pmA.pn10 + pmB.pn10) / 2;
-
-				toSendValues[0] = bothPm1 >> 8;
-				toSendValues[1] = bothPm1 & 0x00FF;
-				toSendValues[2] = bothPm25 >> 8;
-				toSendValues[3] = bothPm25 & 0x00FF;
-				toSendValues[4] = bothPm10 >> 8;
-				toSendValues[5] = bothPm10 & 0x00FF;
-				toSendValues[6] = bothPn03 >> 8;
-				toSendValues[7] = bothPn03 & 0x00FF;
-				toSendValues[8] = bothPn05 >> 8;
-				toSendValues[9] = bothPn05 & 0x00FF;
-				toSendValues[10] = bothPn1 >> 8;
-				toSendValues[11] = bothPn1 & 0x00FF;
-				toSendValues[12] = bothPn25 >> 8;
-				toSendValues[13] = bothPn25 & 0x00FF;
-				toSendValues[14] = bothPn5 >> 8;
-				toSendValues[15] = bothPn5 & 0x00FF;
-				toSendValues[16] = bothPn10 >> 8;
-				toSendValues[17] = bothPn10 & 0x00FF;
-
-				for (uint8_t i=0; i<valuesSize; i++) {
-					Wire.write(toSendValues[i]);
-				}
-
-			// Otherwise send only the active one	
-			} else if (pmA.active) for (uint8_t i=0; i<valuesSize; i++) Wire.write(pmA.values[i]);
-			else if (pmB.active) for (uint8_t i=0; i<valuesSize; i++) Wire.write(pmB.values[i]);
-
-			// Or send 255 as ERROR code
-			else for (uint8_t i=0; i<valuesSize; i++) Wire.write(255);
-
-			break;
-	}
-	case DALLASTEMP_START:
-	{
-			uint8_t result = dallasTemp.start();
-			Wire.write(result);
-			break;
-	}
-	case DALLASTEMP_STOP:
-	{
-			uint8_t result = dallasTemp.stop();
-			Wire.write(result);
-			break;
-	}
-	case GET_DALLASTEMP:
-	{
-			if (!dallasTemp.getReading()) dallasTemp.uRead.fval = -9999;
-			for (uint8_t i=0; i<4; i++) Wire.write(dallasTemp.uRead.b[i]);
-			break;
-	}
-}
 }
 
 void loop()
 {
-	if (millis() - timer > 1000) {
-		pmA.update();
-		pmB.update();
-		timer = millis();
-	}
+	clicksensor.update();
 }
