@@ -12,9 +12,9 @@ In this guide, we will use the arduino device, [the Smart Citizen Kit 2.0 PM Boa
 
 ## A Button Counting Sensor 
 In this guide, we will develop a simple button counter as an external sensor as an example. The counting sensor counts how many times is the button clicked in a certain period. We use mainly three devices in this project as follows:
-(1) a [Smart Citizen Kit 2.1](https://github.com/fablabbcn/smartcitizen-kit-21/)
-(2) a [Smart Citizen Kit 2.0 PM Board](https://github.com/fablabbcn/smartcitizen-kit-pm-board)
-(3) a [Grove Button](https://www.seeedstudio.com/Grove-Button-p-2809.html)
+1. a [Smart Citizen Kit 2.1](https://github.com/fablabbcn/smartcitizen-kit-21/)
+2. a [Smart Citizen Kit 2.0 PM Board](https://github.com/fablabbcn/smartcitizen-kit-pm-board)
+3. a [Grove Button](https://www.seeedstudio.com/Grove-Button-p-2809.html)
 
 ![Alt](https://raw.githubusercontent.com/matsumur/smartcitizen-kit-pm-board/master/connection.png "External Sensor")
 These three devices will be connected as shown in the figure above. 
