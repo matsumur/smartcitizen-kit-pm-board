@@ -28,3 +28,8 @@ After forking the repository, you can see your forked project on the browser. Th
 You open your terminal and change your current directory. Then you paste the location after the command `git clone --recursive`. For example, in my case the complete command is like `git clone --recursive git@github.com:matsumur/smartcitizen-kit-21.git`. Note that the project repository includes submodule; Do not forget `--recursive` option when cloning your repository. 
 
 ## Code your sensor
+Making an external sensor requires two parts of the implementation:
+1. Code for SCK 2.1
+2. Code for your sensor (I2C slave device)
+
+### Code for SCK 2.1
