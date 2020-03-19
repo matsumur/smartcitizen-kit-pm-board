@@ -33,6 +33,34 @@ Making an external sensor requires two parts of the implementation:
 2. Code for your sensor (I2C slave device)
 
 ### Code for SCK 2.1
+We firstly add several lines in the forked repository of SCK2.1.  You need to modify these three files listed below:
+1. lib/Sensors/Sensors.h
+2. sam/src/SckAux.h
+3. sam/src/SckAux.cpp
+
+Let's start coding :) 
+
+#### lib/Sensors/Sensors.h
+lib/Sensors/Sensors.h has a list of all sensors working with SCK2.1. You may find `enum SensorType` in the file. In this guide, we add a click counter as a new SensorType as `SENSOR_CLICK` in Sensor.h. Add a line just before the definition `SENSOR_COUNT`. The `SENSOR_COUNT` should always be placed on the last line because it counts the number of sensors.
+
+We then add a definition of the new sensor as an instance of the class `OneSensor`. All sensor should be an instance of the `OneSensor` class. `OneSensor` class requires 11 parameters to create an instance. 
+
+We define our `SENSOR_CLICK` sensor with following parameters. 
+
+|  SensorLocation  |  priority  | SensorType | shortTitle |     title     | id  | enabled | controllable | everyNintervals | unit |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+|  BOARD_AUX  |  100  |  SENSOR_CLICK  |  "CLICK"  |  "Click Count"  |  121  |  false  |  false  |  1  |  "Clicks"  |
+
+- `SensorLocation` will be `BOARD_AUX` because we use AUX connecter on the SCK board. 
+- `SensorType` should match  the definition on `enum SensorType`. In this time, it will be `SENSOR_CLICK`.
+- `id` will be provided from the administrator of smartcitizen.me platform. You will need to ask them with your blueprint (c.f. https://docs.smartcitizen.me/Guides/Third%20party%20sensors/#publishing-data-using-custom-devices).
+-  `enabled` will be `false` because your sensor will not be attached with the SCK board by default. 
+- If your device has function to calibrate any parameters and/or has any actuators to control, `controllable` should be `true`. Since our sensor has no functionality, it will be `false`.
+- `everyNintervals` defines the interval of fetching data from your sensor. At this time, the SCK fetches and send data every single minute. If you set `everyNintervals` to 10, your sensor data will be fetched every 10 minutes. 
+
+We add the following line for our `SENSOR_CLICK` just before the definition of `SENSOR_COUNT`. The order of the list should be as same as the `enum SensorType`. 
+
+`OneSensor { BOARD_AUX, 100, SENSOR_CLICK, "CLICK", "Click Count", 121, false, false, 1, "Clicks"},`
 
 ```diff
 diff --git a/lib/Sensors/Sensors.h b/lib/Sensors/Sensors.h
@@ -67,6 +95,55 @@ index 5398378..c84b8e6 100644
  
  		OneSensor & operator[](SensorType type) {
 ```
+
+#### sam/src/SckAux.h
+
+```diff
+diff --git a/sam/src/SckAux.h b/sam/src/SckAux.h
+index 73301d5..5716efd 100644
+--- a/sam/src/SckAux.h
++++ b/sam/src/SckAux.h
+@@ -130,7 +130,9 @@ class AuxBoards
+ 			0x77,			// SENSOR_BME680_PRESSURE,
+ 			0x77,			// SENSOR_BME680_VOCS,
+ 
+-			0x3c		// SENSOR_GROOVE_OLED,
++			0x3c,		// SENSOR_GROOVE_OLED,
++
++			0x03		// SENSOR_CLICK,
+ 		};
+ 
+ 		bool start(SensorType wichSensor);
+@@ -555,5 +557,26 @@ class Sck_BME680
+ 		Adafruit_BME680 bme;
+ };
+ 
++class Click
++{
++	public:
++		byte deviceAddress = 0x03;
++		uint16_t count;
++		bool start();
++		bool stop();
++		bool getReading();
++	private:
++		bool started = false;
++		bool failed = false;
++		
++		static const uint8_t valuesSize = 18;
++		uint8_t values[valuesSize];
++		enum Clickcommands{
++			CLICK_START,
++			CLICK_STOP,
++			CLICK_GET
++		};
++};
++
+ void writeI2C(byte deviceAddress, byte instruction, byte data);
+ byte readI2C(byte deviceAddress, byte instruction);
+```
+
+#### sam/src/SckAux.cpp
 
 ```diff
 diff --git a/sam/src/SckAux.cpp b/sam/src/SckAux.cpp
@@ -163,49 +240,4 @@ index b1e2fc7..e4ed9a7 100644
  void writeI2C(byte deviceaddress, byte instruction, byte data )
  {
    auxWire.beginTransmission(deviceaddress);
-```
-
-```diff
-diff --git a/sam/src/SckAux.h b/sam/src/SckAux.h
-index 73301d5..5716efd 100644
---- a/sam/src/SckAux.h
-+++ b/sam/src/SckAux.h
-@@ -130,7 +130,9 @@ class AuxBoards
- 			0x77,			// SENSOR_BME680_PRESSURE,
- 			0x77,			// SENSOR_BME680_VOCS,
- 
--			0x3c		// SENSOR_GROOVE_OLED,
-+			0x3c,		// SENSOR_GROOVE_OLED,
-+
-+			0x03		// SENSOR_CLICK,
- 		};
- 
- 		bool start(SensorType wichSensor);
-@@ -555,5 +557,26 @@ class Sck_BME680
- 		Adafruit_BME680 bme;
- };
- 
-+class Click
-+{
-+	public:
-+		byte deviceAddress = 0x03;
-+		uint16_t count;
-+		bool start();
-+		bool stop();
-+		bool getReading();
-+	private:
-+		bool started = false;
-+		bool failed = false;
-+		
-+		static const uint8_t valuesSize = 18;
-+		uint8_t values[valuesSize];
-+		enum Clickcommands{
-+			CLICK_START,
-+			CLICK_STOP,
-+			CLICK_GET
-+		};
-+};
-+
- void writeI2C(byte deviceAddress, byte instruction, byte data);
- byte readI2C(byte deviceAddress, byte instruction);
 ```
