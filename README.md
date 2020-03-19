@@ -43,12 +43,12 @@ Let's start coding :)
 #### lib/Sensors/Sensors.h
 lib/Sensors/Sensors.h has a list of all sensors working with SCK2.1. You may find `enum SensorType` in the file. In this guide, we add a click counter as a new SensorType as `SENSOR_CLICK` in Sensor.h. Add a line just before the definition `SENSOR_COUNT`. The `SENSOR_COUNT` should always be placed on the last line because it counts the number of sensors.
 
-We then add a definition of the new sensor as an instance of the class `OneSensor`. All sensor should be an instance of the `OneSensor` class. `OneSensor` class requires 11 parameters to create an instance. 
+We then add a definition of the new sensor as an instance of the class `OneSensor`. All sensor should be an instance of the `OneSensor` class. `OneSensor` class requires ten parameters to create an instance. 
 
 We define our `SENSOR_CLICK` sensor with following parameters. 
 
 |  SensorLocation  |  priority  | SensorType | shortTitle |     title     | id  | enabled | controllable | everyNintervals | unit |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 |  BOARD_AUX  |  100  |  SENSOR_CLICK  |  "CLICK"  |  "Click Count"  |  121  |  false  |  false  |  1  |  "Clicks"  |
 
 - `SensorLocation` will be `BOARD_AUX` because we use AUX connecter on the SCK board. 
