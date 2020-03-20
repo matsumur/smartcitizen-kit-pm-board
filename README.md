@@ -97,6 +97,11 @@ index 5398378..c84b8e6 100644
 ```
 
 #### sam/src/SckAux.h
+The AUX connecter is controlled by the MCU SAMD21. So, the target codes are in the sam/src directory in the repository. 
+
+**I2C address Definition** We firstly add a definition of I2C address in the list of `byte devAddress[]`. As all I2C address used in SCK are listed in the array, all you need is to find an address that is not in use on SCK. This time, we use `0x03` as the I2C address for our sensor. We add a line `0x03		// SENSOR_CLICK,` in the array `byte devAddress[]`.
+
+
 
 ```diff
 diff --git a/sam/src/SckAux.h b/sam/src/SckAux.h
