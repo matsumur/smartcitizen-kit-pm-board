@@ -2,12 +2,14 @@ __For the instruction of the Smart Citizen Kit 2.0 PM Board, please refer to [th
 ## A Guide to making an external sensor for SCK 2.1
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
+<iframe src="https://player.vimeo.com/video/399042914" width="640" height="480" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+
 Table of Contents:
 1. [A Button Counting Sensor](#A-Button-Counting-Sensor)
 2. [Fork SCK2.1 github repository](#Fork-SCK21-github-repository)
 3. [Code your sensor](#Code-your-sensor)
 	- [Code for SCK 2.1](#Code-for-SCK-21)
-	- Code for the I2C slave
+	- [Code for the I2C slave](#Code-for-the-I2C-slave)
 
 In this guide, we will make an external sensor for SCK 2.1. We use an auxiliary port on SCK 2.1 and connect an external sensor. Since the auxiliary port works as an I2C master by default, we will build the external sensor as an I2C slave. 
 
@@ -59,10 +61,10 @@ We define our `SENSOR_CLICK` sensor with following parameters.
 |  BOARD_AUX  |  100  |  SENSOR_CLICK  |  "CLICK"  |  "Click Count"  |  121  |  false  |  false  |  1  |  "Clicks"  |
 
 - `SensorLocation` will be `BOARD_AUX` because we use AUX connecter on the SCK board. 
-- `SensorType` should match  the definition on `enum SensorType`. In this time, it will be `SENSOR_CLICK`.
-- `id` will be provided from the administrator of smartcitizen.me platform. You will need to ask them with your blueprint (c.f. https://docs.smartcitizen.me/Guides/Third%20party%20sensors/#publishing-data-using-custom-devices).
--  `enabled` will be `false` because your sensor will not be attached with the SCK board by default. 
-- If your device has function to calibrate any parameters and/or has any actuators to control, `controllable` should be `true`. Since our sensor has no functionality, it will be `false`.
+- `SensorType` should match  the definition on `enum SensorType`. At this time, it will be `SENSOR_CLICK`.
+- `id` will be provided by the administrator of the smartcitizen.me platform. You will need to ask them with your blueprint (c.f. https://docs.smartcitizen.me/Guides/Third%20party%20sensors/#publishing-data-using-custom-devices).
+-  `enabled` will be `false` because your sensor will not be attached to the SCK board by default. 
+- If your device has functions to calibrate any parameters and/or has any actuators to control, `controllable` should be `true`. Since our sensor has no functionality, it will be `false`.
 - `everyNintervals` defines the interval of fetching data from your sensor. At this time, the SCK fetches and send data every single minute. If you set `everyNintervals` to 10, your sensor data will be fetched every 10 minutes. 
 
 We add the following line for our `SENSOR_CLICK` just before the definition of `SENSOR_COUNT`. The order of the list should be as same as the `enum SensorType`. 
@@ -351,3 +353,4 @@ index b1e2fc7..e4ed9a7 100644
  {
    auxWire.beginTransmission(deviceaddress);
 ```
+
