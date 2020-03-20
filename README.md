@@ -103,7 +103,7 @@ The AUX connecter is controlled by the MCU SAMD21. So, the target codes are in t
 
 **Add a class** We then add a class definition in the header file. The class may have three functions, `start()`, `stop()`, and `getReading()`, we defined these three as public functions. Since our click counter sensor has 16 bits counter, we defined a variable as `uint16_t count`. We also defined I2C address as `deviceAddress` and it should match with the definition in `byte devAddress[]`.
 
-Because the I2C communication sends/receives 8 bits of data as a packet, we defined for the sake of buffering them as `uint8_t values[valuesSize]`.
+Because the I2C communication sends/receives 8 bits of data as a packet, we defined an array for the sake of buffering them as `uint8_t values[valuesSize]`.
 
 All the definition of the class for our sensor is shown as follows:
 
@@ -177,6 +177,14 @@ index 73301d5..5716efd 100644
 ```
 
 #### sam/src/SckAux.cpp
+Program codes are always complicated than the definition, however, thanks to 
+the clean codes in `SckAux.cpp` we can easily add codes for our external sensor. Let's code a logic step by step.
+
+**Create an instance** We first create an instance by declaring `Click click;` in the first section of the `SckAux.cpp`.
+
+**Switch-case statement** We then add lines for handling our sensor. You need to code in the three functions: `bool AuxBoards::start()`, `bool AuxBoards::stop()`, and `void AuxBoards::getReading()`. It will be very simple statements. At this time, we added a line 
+as `case SENSOR_CLICK: return click.start(); break;` in `bool AuxBoards::start()`, as `case SENSOR_CLICK: return click.stop(); break;` in 
+`bool AuxBoards::stop()`, and as `case SENSOR_CLICK: if (click.getReading()) { wichSensor->reading = String(click.count); return; } break;` in `void AuxBoards::getReading()`.
 
 ```diff
 diff --git a/sam/src/SckAux.cpp b/sam/src/SckAux.cpp
