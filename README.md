@@ -2,6 +2,13 @@ __For the instruction of the Smart Citizen Kit 2.0 PM Board, please refer to [th
 ## A Guide to making an external sensor for SCK 2.1
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
+Table of Contents:
+1. [A Button Counting Sensor](#A-Button-Counting-Sensor)
+2. Fork SCK2.1 github repository. 
+3. Code your sensor
+	- Code for SCK 2.1
+	- Code for the I2C slave
+
 In this guide, we will make an external sensor for SCK 2.1. We use an auxiliary port on SCK 2.1 and connect an external sensor. Since the auxiliary port works as an I2C master by default, we will build the external sensor as an I2C slave. 
 
 ![Alt](https://raw.githubusercontent.com/matsumur/smartcitizen-kit-pm-board/master/externalsensor.png "External Sensor")
