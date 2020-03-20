@@ -46,7 +46,7 @@ We firstly add several lines in the forked repository of SCK2.1.  You need to mo
 3. sam/src/SckAux.cpp
 
 Let's start coding :) 
-
+-----
 #### lib/Sensors/Sensors.h
 lib/Sensors/Sensors.h has a list of all sensors working with SCK2.1. You may find `enum SensorType` in the file. In this guide, we add a click counter as a new SensorType as `SENSOR_CLICK` in Sensor.h. Add a line just before the definition `SENSOR_COUNT`. The `SENSOR_COUNT` should always be placed on the last line because it counts the number of sensors.
 
@@ -102,13 +102,13 @@ index 5398378..c84b8e6 100644
  
  		OneSensor & operator[](SensorType type) {
 ```
-
+-----
 #### sam/src/SckAux.h
 The AUX connecter is controlled by the MCU SAMD21. So, the target codes are in the sam/src directory in the repository. 
 
 **I2C address Definition** We firstly add a definition of I2C address in the list of `byte devAddress[]`. As all I2C addresses used in SCK are listed in the array, all you need is to find an address that is not in use on SCK. This time, we use `0x03` as the I2C address for our sensor. We add a line `0x03		// SENSOR_CLICK,` in the array `byte devAddress[]`.
 
-**Add a class** We then add a class definition in the header file. The class may have three functions, `start()`, `stop()`, and `getReading()`, we defined these three as public functions. Since our click counter sensor has 16 bits counter, we defined a variable as `uint16_t count`. We also defined I2C address as `deviceAddress` and it should match with the definition in `byte devAddress[]`.
+**Adding a class** We then add a class definition in the header file. The class may have three functions, `start()`, `stop()`, and `getReading()`, we defined these three as public functions. Since our click counter sensor has 16 bits counter, we defined a variable as `uint16_t count`. We also defined I2C address as `deviceAddress` and it should match with the definition in `byte devAddress[]`.
 
 Because the I2C communication sends/receives 8 bits of data as a packet, we defined an array for the sake of buffering them as `uint8_t values[valuesSize]`.
 
@@ -182,12 +182,12 @@ index 73301d5..5716efd 100644
  void writeI2C(byte deviceAddress, byte instruction, byte data);
  byte readI2C(byte deviceAddress, byte instruction);
 ```
-
+-----
 #### sam/src/SckAux.cpp
 Program codes are always complicated than the definition, however, thanks to 
 the clean codes in `SckAux.cpp` we can easily add codes for our external sensor. Let's code a logic step by step.
 
-**Create an instance** We first create an instance by declaring `Click click;` in the first section of the `SckAux.cpp`.
+**Creating an instance** We first create an instance by declaring `Click click;` in the first section of the `SckAux.cpp`.
 
 **Switch-case statement** We then add lines for handling our sensor. You need to code in the three functions: `bool AuxBoards::start()`, `bool AuxBoards::stop()`, and `void AuxBoards::getReading()`. It will be very simple statements. At this time, we added a line 
 as `case SENSOR_CLICK: return click.start(); break;` in `bool AuxBoards::start()`, as `case SENSOR_CLICK: return click.stop(); break;` in 
@@ -351,5 +351,101 @@ index b1e2fc7..e4ed9a7 100644
  {
    auxWire.beginTransmission(deviceaddress);
 ```
-
+-----
 ### Code for the I2C slave
+The second part of implementation will be the sensor itself. As we mentioned above, the auxiliary port works as an I2C master by default and the external sensor works as an I2C slave. We use a [Smart Citizen Kit 2.0 PM Board](https://github.com/fablabbcn/smartcitizen-kit-pm-board) and a [Grove Button](https://www.seeedstudio.com/Grove-Button-p-2809.html) for the hardwares. So, all codes are for these board. However, you can use many of Arduino compatible board or any board that speaks I2C as a slave. 
+
+To implement the external sensor, we wrote several codes on the following three files. We will give some explanations for implementing an I2C slave that works with the [Code for SCK 2.1](#Code-for-SCK-21).
+
+1. [PM_driver.h](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.h)
+2. [PM_driver.cpp](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.cpp)
+3. [PM_driver.ino](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.ino)
+
+**Definition of the command** We firstly code for a definition of the command. As you can find them in [PM_driver.h](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.h), there is a definition named `Clickcommand`. This should match with the command defined in [SckAux.h](https://github.com/matsumur/smartcitizen-kit-21/blob/17c7c76/sam/src/SckAux.h#L574-L578). We defined the command as follows:
+
+```cpp
+enum Clickcommands{
+	CLICK_START,
+	CLICK_STOP,
+	CLICK_GET
+};
+```
+
+**Definition of the class** We then define the class that handles a digital input (i.e., a button connected to the GPIO) and stores the data (i.e., click count). 
+
+We defined four functions to answer the command from the I2C master, to scan the state of the button, and to update the value of the button count. 
+
+We also defined a 16-bits counter `uint16_t buttonCount` and an array `uint8_t values[2]` that will be used in the I2C communication. Two private variables are for click counting. 
+
+```cpp
+class ClickSensor {
+public:
+
+	ClickSensor() {
+
+	}
+	bool begin();
+	bool stop();
+	void reset();
+	bool update();
+	bool active = false;
+
+	uint8_t values[valuesSize];
+	// Transmission via I2C to SCK in 2 bytes:
+	// 0:1->clicks 
+
+	// Readings
+	uint16_t buttonCount = 0;
+
+private:
+	bool currentButtonState = false;
+	bool lastButtonState = false;
+};
+```
+
+**Implementation of the class** The following codes are the implementation of the `ClickSensor` class. Since it is very simple, you may easily understand them. If there is any question, please contact us. The code will be found [here](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.cpp).
+
+```cpp
+#include "PM_driver.h"
+
+bool ClickSensor::begin(){
+	active = true;
+	return true;
+}
+bool ClickSensor::stop(){
+	active = false;
+	return true;
+}
+void ClickSensor::reset(){
+	currentButtonState = false;
+	lastButtonState = false;
+	buttonCount = 0;
+}
+bool ClickSensor::update(){
+	if(!active){
+		return false;
+	}else{
+		//read button state
+		currentButtonState = digitalRead(GPIO0);
+
+		//check if button state changed
+		if(lastButtonState != currentButtonState){
+			// check if button released
+			if(currentButtonState){
+				buttonCount++;
+				// Prepare values for I2C retransmission
+				values[0] = buttonCount >> 8;
+				values[1] = buttonCount & 0x00FF;
+
+		#ifdef debug_PM
+					SerialUSB.println("button: " + String(buttonCount));
+		#endif
+			}
+			lastButtonState = currentButtonState;
+		}
+	}
+	return true;
+}
+```
+
+**Implementation of the main function** [PM_driver.ino](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.ino)
