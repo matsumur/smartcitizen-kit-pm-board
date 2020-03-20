@@ -2,8 +2,6 @@ __For the instruction of the Smart Citizen Kit 2.0 PM Board, please refer to [th
 ## A Guide to making an external sensor for SCK 2.1
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
-<iframe src="https://player.vimeo.com/video/399042914" width="640" height="480" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
-
 Table of Contents:
 1. [A Button Counting Sensor](#A-Button-Counting-Sensor)
 2. [Fork SCK2.1 github repository](#Fork-SCK21-github-repository)
