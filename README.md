@@ -13,9 +13,9 @@ In this guide, we will make an external sensor for SCK 2.1. We use an auxiliary 
 
 ![Alt](https://raw.githubusercontent.com/matsumur/smartcitizen-kit-pm-board/master/externalsensor.png "External Sensor")
 
-You may use any sensors that uses the I2C communication. The only restriction is the I2C address. The address should not be used already. The complete definition of the I2C addresses used in SCK 2.1 can be found on the [code](https://github.com/fablabbcn/smartcitizen-kit-21/blob/f9d7513/sam/src/SckAux.h#L59-L134).
+You may use any sensors that use the I2C communication. The only restriction is the I2C address. The address should not be used already. The complete definition of the I2C addresses used in SCK 2.1 can be found on the [code](https://github.com/fablabbcn/smartcitizen-kit-21/blob/f9d7513/sam/src/SckAux.h#L59-L134).
 
-In this guide, we will use an Arduino device, [the Smart Citizen Kit 2.0 PM Board](https://github.com/fablabbcn/smartcitizen-kit-pm-board), as an I2C slave device. The board is compatible to [Arduino Zero](https://store.arduino.cc/arduino-zero) and has capability to act as I2C slave. Many Arduino devices can act as I2C slave using the [Wire library](https://www.arduino.cc/en/Reference/Wire). So you may use your own Arduino compatible devices for making your external sensor.
+In this guide, we will use an Arduino device, [the Smart Citizen Kit 2.0 PM Board](https://github.com/fablabbcn/smartcitizen-kit-pm-board), as an I2C slave device. The board is compatible with [Arduino Zero](https://store.arduino.cc/arduino-zero) and can act as an I2C slave. Many Arduino devices can act as an I2C slave using the [Wire library](https://www.arduino.cc/en/Reference/Wire). So you may use your own Arduino compatible devices for making your external sensor.
 
 ## A Button Counting Sensor 
 In this guide, we will develop a simple button counter as an external sensor as an example. The counting sensor counts how many times is the button clicked in a certain period. We use mainly three devices in this project as follows:
@@ -28,11 +28,11 @@ These three devices will be connected as shown in the figure above.
 
 
 ## Fork SCK2.1 github repository. 
-Go to https://github.com/fablabbcn/smartcitizen-kit-21 and find Fork button on the top right of the webpage. The forking process requires only a few minutes. 
+Go to https://github.com/fablabbcn/smartcitizen-kit-21 and find `Fork` button on the top right of the webpage. The forking process requires only a few minutes. 
 
 After forking the repository, you can see your forked project on the browser. Then you can clone the project. Click the Clone or download button and copy the location of the project. 
 
-You open your terminal and change your current directory. Then you paste the location after the command `git clone --recursive`. For example, in my case the complete command is like `git clone --recursive git@github.com:matsumur/smartcitizen-kit-21.git`. Note that the project repository includes submodule; Do not forget `--recursive` option when cloning your repository. 
+You open your terminal and change your current directory. Then you paste the location after the command `git clone --recursive`. For example, in my case, the complete command is like `git clone --recursive git@github.com:matsumur/smartcitizen-kit-21.git`. Note that the project repository includes submodule; Do not forget `--recursive` option when cloning your repository. 
 
 ## Code your sensor
 Making an external sensor requires two parts of the implementation:
@@ -50,9 +50,9 @@ Let's start coding :)
 #### lib/Sensors/Sensors.h
 lib/Sensors/Sensors.h has a list of all sensors working with SCK2.1. You may find `enum SensorType` in the file. In this guide, we add a click counter as a new SensorType as `SENSOR_CLICK` in Sensor.h. Add a line just before the definition `SENSOR_COUNT`. The `SENSOR_COUNT` should always be placed on the last line because it counts the number of sensors.
 
-We then add a definition of the new sensor as an instance of the class `OneSensor`. All sensor should be an instance of the `OneSensor` class. `OneSensor` class requires ten parameters to create an instance. 
+We then add a definition of the new sensor as an instance of the class `OneSensor`. All sensors should be instances of the `OneSensor` class. `OneSensor` class requires ten parameters to create an instance. 
 
-We define our `SENSOR_CLICK` sensor with following parameters. 
+We define our `SENSOR_CLICK` sensor with the following parameters. 
 
 |  SensorLocation  |  priority  | SensorType | shortTitle |     title     | id  | enabled | controllable | everyNintervals | unit |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
@@ -106,7 +106,7 @@ index 5398378..c84b8e6 100644
 #### sam/src/SckAux.h
 The AUX connecter is controlled by the MCU SAMD21. So, the target codes are in the sam/src directory in the repository. 
 
-**I2C address Definition** We firstly add a definition of I2C address in the list of `byte devAddress[]`. As all I2C address used in SCK are listed in the array, all you need is to find an address that is not in use on SCK. This time, we use `0x03` as the I2C address for our sensor. We add a line `0x03		// SENSOR_CLICK,` in the array `byte devAddress[]`.
+**I2C address Definition** We firstly add a definition of I2C address in the list of `byte devAddress[]`. As all I2C addresses used in SCK are listed in the array, all you need is to find an address that is not in use on SCK. This time, we use `0x03` as the I2C address for our sensor. We add a line `0x03		// SENSOR_CLICK,` in the array `byte devAddress[]`.
 
 **Add a class** We then add a class definition in the header file. The class may have three functions, `start()`, `stop()`, and `getReading()`, we defined these three as public functions. Since our click counter sensor has 16 bits counter, we defined a variable as `uint16_t count`. We also defined I2C address as `deviceAddress` and it should match with the definition in `byte devAddress[]`.
 
@@ -352,3 +352,4 @@ index b1e2fc7..e4ed9a7 100644
    auxWire.beginTransmission(deviceaddress);
 ```
 
+### Code for the I2C slave
