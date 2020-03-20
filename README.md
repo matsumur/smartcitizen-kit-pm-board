@@ -101,8 +101,36 @@ The AUX connecter is controlled by the MCU SAMD21. So, the target codes are in t
 
 **I2C address Definition** We firstly add a definition of I2C address in the list of `byte devAddress[]`. As all I2C address used in SCK are listed in the array, all you need is to find an address that is not in use on SCK. This time, we use `0x03` as the I2C address for our sensor. We add a line `0x03		// SENSOR_CLICK,` in the array `byte devAddress[]`.
 
+**Add a class** We then add a class definition in the header file. The class may have three functions, `start()`, `stop()`, and `getReading()`, we defined these three as public functions. Since our click counter sensor has 16 bits counter, we defined a variable as `uint16_t count`. We also defined I2C address as `deviceAddress` and it should match with the definition in `byte devAddress[]`.
 
+Because the I2C communication sends/receives 8 bits of data as a packet, we defined for the sake of buffering them as `uint8_t values[valuesSize]`.
 
+All the definition of the class for our sensor is shown as follows:
+
+```cpp
+class Click
+{
+	public:
+		byte deviceAddress = 0x03;
+		uint16_t count;
+		bool start();
+		bool stop();
+		bool getReading();
+	private:
+		bool started = false;
+		bool failed = false;
+		
+		static const uint8_t valuesSize = 2;
+		uint8_t values[valuesSize];
+		enum Clickcommands{
+			CLICK_START,
+			CLICK_STOP,
+			CLICK_GET
+		};
+};
+```
+
+We also show the diff between the original file and ours as follows:
 ```diff
 diff --git a/sam/src/SckAux.h b/sam/src/SckAux.h
 index 73301d5..5716efd 100644
