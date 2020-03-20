@@ -186,7 +186,7 @@ the clean codes in `SckAux.cpp` we can easily add codes for our external sensor.
 as `case SENSOR_CLICK: return click.start(); break;` in `bool AuxBoards::start()`, as `case SENSOR_CLICK: return click.stop(); break;` in 
 `bool AuxBoards::stop()`, and as `case SENSOR_CLICK: if (click.getReading()) { wichSensor->reading = String(click.count); return; } break;` in `void AuxBoards::getReading()`.
 
-**Implement start()** The start() function is relatively simple. It checks if the external sensor is connected, sends `CLICK_START` command to the external sensor (I2C slave), and receives _ack_ from the sensor. 
+**Implementing start()** The start() function is relatively simple. It checks if the external sensor is connected, sends `CLICK_START` command to the external sensor (I2C slave), and receives _ack_ from the sensor. 
 
 ```cpp
 bool Click::start()
@@ -208,7 +208,7 @@ bool Click::start()
 	return result;
 }
 ```
-**Implement stop()** The start() function is much more simple. It checks whether the sensor is connected, and sends a command `CLICK_STOP` to the sensor.
+**Implementing stop()** The start() function is much more simple. It checks whether the sensor is connected, and sends a command `CLICK_STOP` to the sensor.
 
 ```cpp
 bool Click::stop()
@@ -224,7 +224,7 @@ bool Click::stop()
 }
 ```
 
-**Implement getReading()** The getReading() function sends a command `CLICK_GET` to request data from the sensor, receives 2 bytes of data from the sensor, converts the data to 16 bits integer value, and stores it in the variable. 
+**Implementing getReading()** The getReading() function sends a command `CLICK_GET` to request data from the sensor, receives 2 bytes of data from the sensor, converts the data to 16 bits integer value, and stores it in the variable. 
 
 ```cpp
 bool Click::getReading()
