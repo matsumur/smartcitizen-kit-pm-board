@@ -186,6 +186,68 @@ the clean codes in `SckAux.cpp` we can easily add codes for our external sensor.
 as `case SENSOR_CLICK: return click.start(); break;` in `bool AuxBoards::start()`, as `case SENSOR_CLICK: return click.stop(); break;` in 
 `bool AuxBoards::stop()`, and as `case SENSOR_CLICK: if (click.getReading()) { wichSensor->reading = String(click.count); return; } break;` in `void AuxBoards::getReading()`.
 
+**Implement start()** The start() function is relatively simple. It checks if the external sensor is connected, sends `CLICK_START` command to the external sensor (I2C slave), and receives _ack_ from the sensor. 
+
+```cpp
+bool Click::start()
+{
+	if (started) return true;
+
+	if (!I2Cdetect(&auxWire, deviceAddress)) return false;
+
+	auxWire.beginTransmission(deviceAddress);
+	auxWire.write(CLICK_START);
+	auxWire.endTransmission();
+	auxWire.requestFrom(deviceAddress, 1);
+
+	bool result = auxWire.read();
+
+	if (result == 0) failed = true;
+	else started = true;
+
+	return result;
+}
+```
+**Implement stop()** The start() function is much more simple. It checks whether the sensor is connected, and sends a command `CLICK_STOP` to the sensor.
+
+```cpp
+bool Click::stop()
+{
+	if (!I2Cdetect(&auxWire, deviceAddress)) return false;
+
+	auxWire.beginTransmission(deviceAddress);
+	auxWire.write(CLICK_STOP);
+	auxWire.endTransmission();
+
+	started = false;
+	return true;
+}
+```
+
+**Implement getReading()** The getReading() function sends a command `CLICK_GET` to request data from the sensor, receives 2 bytes of data from the sensor, converts the data to 16 bits integer value, and stores it in the variable. 
+
+```cpp
+bool Click::getReading()
+{
+	auxWire.beginTransmission(deviceAddress);
+	auxWire.write(CLICK_GET);
+	auxWire.endTransmission();
+
+	// Get the reading
+	auxWire.requestFrom(deviceAddress, valuesSize);
+	uint32_t start = millis();
+	while (!auxWire.available()) if ((millis() - start)>500) return false;
+
+	for (uint8_t i=0; i<valuesSize; i++) {
+		values[i] = auxWire.read();
+	}
+	count = (values[0]<<8) + values[1];
+
+	return true;
+}
+```
+
+All the diff between the original SckAux.cpp and our modification is shown as follows:
 ```diff
 diff --git a/sam/src/SckAux.cpp b/sam/src/SckAux.cpp
 index b1e2fc7..e4ed9a7 100644
