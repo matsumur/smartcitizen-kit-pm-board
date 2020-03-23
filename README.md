@@ -46,8 +46,9 @@ We firstly add several lines in the forked repository of SCK2.1.  You need to mo
 3. sam/src/SckAux.cpp
 
 Let's start coding :) 
------
+
 #### lib/Sensors/Sensors.h
+-----
 lib/Sensors/Sensors.h has a list of all sensors working with SCK2.1. You may find `enum SensorType` in the file. In this guide, we add a click counter as a new SensorType as `SENSOR_CLICK` in Sensor.h. Add a line just before the definition `SENSOR_COUNT`. The `SENSOR_COUNT` should always be placed on the last line because it counts the number of sensors.
 
 We then add a definition of the new sensor as an instance of the class `OneSensor`. All sensors should be instances of the `OneSensor` class. `OneSensor` class requires ten parameters to create an instance. 
@@ -102,8 +103,9 @@ index 5398378..c84b8e6 100644
  
  		OneSensor & operator[](SensorType type) {
 ```
------
+
 #### sam/src/SckAux.h
+-----
 The AUX connecter is controlled by the MCU SAMD21. So, the target codes are in the sam/src directory in the repository. 
 
 **I2C address Definition** We firstly add a definition of I2C address in the list of `byte devAddress[]`. As all I2C addresses used in SCK are listed in the array, all you need is to find an address that is not in use on SCK. This time, we use `0x03` as the I2C address for our sensor. We add a line `0x03		// SENSOR_CLICK,` in the array `byte devAddress[]`.
@@ -351,8 +353,9 @@ index b1e2fc7..e4ed9a7 100644
  {
    auxWire.beginTransmission(deviceaddress);
 ```
------
+
 ### Code for the I2C slave
+-----
 The second part of implementation will be the sensor itself. As we mentioned above, the auxiliary port works as an I2C master by default and the external sensor works as an I2C slave. We use a [Smart Citizen Kit 2.0 PM Board](https://github.com/fablabbcn/smartcitizen-kit-pm-board) and a [Grove Button](https://www.seeedstudio.com/Grove-Button-p-2809.html) for the hardwares. So, all codes are for these board. However, you can use many of Arduino compatible board or any board that speaks I2C as a slave. 
 
 To implement the external sensor, we wrote several codes on the following three files. We will give some explanations for implementing an I2C slave that works with the [Code for SCK 2.1](#Code-for-SCK-21).
@@ -448,4 +451,69 @@ bool ClickSensor::update(){
 }
 ```
 
-**Implementation of the main function** [PM_driver.ino](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.ino)
+**Implementation of the main function** The main function sets up the mode of GPIOs and handles the I2C communication. In this guide, we will explain the imporant parts of them. All codes can be found [here](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.ino).
+
+**Setting up** In [PM_driver.ino](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/master/firmware/src/PM_driver.ino), you can find the definition of I2C_ADDRESS for the I2C slave as `#define I2C_ADDRESS 0x03`. The address `0x03` should match This should match with the address defined in [SckAux.h](https://github.com/matsumur/smartcitizen-kit-21/blob/17c7c76/sam/src/SckAux.h#L135). 
+
+The [Wire library](https://www.arduino.cc/en/Reference/Wire) supports making the I2C slave device. To declare the device as an I2C slave, you should write a line as `Wire.begin(I2C_ADDRESS);`. This can be found in the `setup()` function in [PM_driver.ino](https://github.com/matsumur/smartcitizen-kit-pm-board/blob/4243472/firmware/src/PM_driver.ino#L74-L76). You will need to setup event handler as declaring these two lines, `	Wire.onReceive(receiveEvent);` and `Wire.onRequest(requestEvent);`.
+
+```cpp
+	Wire.begin(I2C_ADDRESS);
+	Wire.onReceive(receiveEvent);
+	Wire.onRequest(requestEvent);
+```
+
+In the setup, you don't forget to create an instance of ClickSensor by adding a line as `ClickSensor clicksensor;`.
+
+**Eventlistener** 
+
+```cpp
+void receiveEvent(int howMany)
+{
+	byte command = 99;
+	if (Wire.available()) command = Wire.read();
+
+	switch(command) {
+		case CLICK_START:
+		{
+			clicksensor.begin();
+			wichCommand = command;
+			break;
+		}
+		case CLICK_STOP:
+		{
+			clicksensor.stop();
+			break;
+		}
+		case CLICK_GET:
+		{
+			wichCommand = command;
+			break;
+		}
+	}
+}
+```
+
+```cpp
+void requestEvent()
+{
+	switch (wichCommand)
+	{
+		case CLICK_START:
+		{
+			Wire.write(1);
+			break;
+		}
+		case CLICK_GET:
+		{
+			if (clicksensor.active){
+				for (uint8_t i=0; i<valuesSize; i++) Wire.write(clicksensor.values[i]);
+				clicksensor.buttonCount = 0;
+			}else{
+				for (uint8_t i=0; i<valuesSize; i++) Wire.write(255);
+			}
+			break;
+		}
+	}
+}
+```
